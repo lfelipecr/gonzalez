@@ -13,14 +13,9 @@ class SaleOrder(models.Model):
     _name = "sale.order"
     _inherit = "sale.order"
 
-    state = fields.Selection([
-        ('created','Borrador'),
-        ('draft', 'Quotation'),
-        ('sent', 'Quotation Sent'),
-        ('sale', 'Sales Order'),
-        ('done', 'Locked'),
-        ('cancel', 'Cancelled'),
-    ], string='Estado', readonly=True, copy=False, index=True, tracking=3, default='created')
+    state = fields.Selection(selection_add=[
+        ('created', 'Borrador')
+    ], ondelete={'created': 'cascade'}, default='created')
 
     is_revised = fields.Boolean('Revisado') #state "CREATED"
 

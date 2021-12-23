@@ -81,3 +81,58 @@ class SaleOrder(models.Model):
         if self.state == 'created':
             self.state = 'draft'
             self.is_revised = True
+
+    def unlink(self):
+        for order in self:
+            if order.state == 'created': #Añadimos created
+                return models.Model.unlink(order)
+            elif order.state not in ('draft', 'cancel'):
+                raise UserError(_('You can not delete a sent quotation or a confirmed sales order. You must first cancel it.'))
+        return super().unlink()
+
+    def _validation_partner(self,partner_id):
+        if not partner_id.code:
+            raise ValidationError(_('El cliente no tiene un código definido.'))
+
+        if not partner_id.abbreviation:
+            raise ValidationError(_('El cliente no tiene una abreviatura definida.'))
+
+        if not partner_id.location:
+            raise ValidationError(_('El cliente no tiene una locación definida.'))
+
+
+    @api.model
+    def create(self, vals):
+        #validaciones
+        if vals['partner_id']:
+            partner_id = self.env['res.partner'].sudo().browse(vals['partner_id'])
+        else:
+            raise ValidationError(_('Defina un cliente por favor.'))
+
+        self._validation_partner(partner_id)
+
+        if 'company_id' in vals:
+            self = self.with_company(vals['company_id'])
+        if vals.get('name', _('New')) == _('New'):
+            seq_date = None
+            if 'date_order' in vals:
+                seq_date = fields.Datetime.context_timestamp(self, fields.Datetime.to_datetime(vals['date_order']))
+            #Todo: Campo a reemplazar 23-12-21
+            #vals['name'] = self.env['ir.sequence'].next_by_code('sale.order', sequence_date=seq_date) or _('New')
+            sequence = self.env.ref('l10n_cr_gonzales.seq_sale_order_gonzales').next_by_id() or _('New')
+            mes = datetime.today().month
+            anio = datetime.today().year
+            day = datetime.today().day
+            mes_anio_dia = str(mes)+''+str(anio)+''+str(day)
+            name = partner_id.location + '-' + partner_id.code + '-' + mes_anio_dia + '-'+partner_id.abbreviation +'-'+sequence
+            vals['name'] = name
+
+        # Makes sure partner_invoice_id', 'partner_shipping_id' and 'pricelist_id' are defined
+        if any(f not in vals for f in ['partner_invoice_id', 'partner_shipping_id', 'pricelist_id']):
+            partner = self.env['res.partner'].browse(vals.get('partner_id'))
+            addr = partner.address_get(['delivery', 'invoice'])
+            vals['partner_invoice_id'] = vals.setdefault('partner_invoice_id', addr['invoice'])
+            vals['partner_shipping_id'] = vals.setdefault('partner_shipping_id', addr['delivery'])
+            vals['pricelist_id'] = vals.setdefault('pricelist_id', partner.property_product_pricelist.id)
+        result = super(SaleOrder, self).create(vals)
+        return result

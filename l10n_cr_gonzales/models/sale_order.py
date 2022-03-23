@@ -120,11 +120,13 @@ class SaleOrder(models.Model):
             #Todo: Campo a reemplazar 23-12-21
             #vals['name'] = self.env['ir.sequence'].next_by_code('sale.order', sequence_date=seq_date) or _('New')
             sequence = self.env.ref('l10n_cr_gonzales.seq_sale_order_gonzales').next_by_id() or _('New')
-            mes = datetime.today().month
-            anio = datetime.today().year
-            day = datetime.today().day
-            mes_anio_dia = str(mes)+''+str(anio)+''+str(day)
-            name = partner_id.location + '-' + partner_id.code + '-' + mes_anio_dia + '-'+partner_id.abbreviation +'-'+sequence
+            #mes = datetime.today().month
+            #anio = datetime.today().year
+            #day = datetime.today().day
+            #mes_anio_dia = str(mes)+''+str(anio)+''+str(day)
+            #mes_anio_dia = str(mes)+''+str(anio)+''+str(day)
+            mes_anio_dia = datetime.today().strftime('%m%y%d')
+            name = partner_id.location + '-' + partner_id.code + '-' + mes_anio_dia + '-'+partner_id.abbreviation + '-' + sequence
             vals['name'] = name
 
         # Makes sure partner_invoice_id', 'partner_shipping_id' and 'pricelist_id' are defined

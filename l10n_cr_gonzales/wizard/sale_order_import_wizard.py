@@ -57,7 +57,7 @@ class SaleOrderImportWizard(models.TransientModel):
             elif not product:
                 orders_errors.append('Linea:' + str(pos) + ' - el producto : ' + str(code_product) + ' no fue encontrado.')
             elif order and product:
-                if order.state not in ('draft','sent'):
+                if order.state not in ('draft','sent','created'):
                     orders_errors.append('Linea:' + str(pos) + ' - el pedido : ' + str(code_order) + ' esta en estado : ' + str(order.state))
                 else:
                     sw = 0

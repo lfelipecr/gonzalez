@@ -49,6 +49,16 @@ class SaleOrderImportWizard(models.TransientModel):
             quantity = sheet.cell(i,2).value
             #note_toys = sheet.cell(i,3).value
 
+            if type(code_order) == float:
+                code_order = str(int(code_order))
+            elif type(code_order) == int:
+                code_order = str(code_order)
+
+            if type(code_product) == float:
+                code_product = str(int(code_product))
+            elif type(code_product) == int:
+                code_product = str(code_product)
+
             order = self.env['sale.order'].sudo().search([('name','=',code_order)])
             product = self.env['product.product'].sudo().search([('default_code', '=', code_product)])
 
@@ -70,7 +80,7 @@ class SaleOrderImportWizard(models.TransientModel):
                     if sw == 0:
                         sale_order_line.create({
                             'product_id': product.id,
-                            'name': product.id,
+                            'name': product.name,
                             'product_uom_qty': quantity,
                             'order_id': order.id,
                             #'note_toys': note_toys

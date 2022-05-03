@@ -13,7 +13,15 @@
                         string="Revisado" type="object"
                         attrs="{'invisible': [('state', 'not in', ['created'])]}"
                         groups="l10n_cr_gonzales.group_sale_state_revised"
-                        confirm="Estiamdo usuario, desea para a estado 'Revisado' ? "/>
+                        confirm="Estimado usuario, desea para a estado 'Revisado' ? "/>
+            </xpath>
+            <xpath expr="//field[@name='order_line']" position="before">
+                <div>
+                    <button string="Eliminar impuestos" type="object" name="delete_taxes" class="oe_highlight float-right" id="btn_delete_taxes" />
+                </div>
+            </xpath>
+              <xpath expr="//field[@name='order_line']/tree//field[@name='product_uom_qty']" position="before">
+                <field name="qty_min_product" optional="show"/>
             </xpath>
         </field>
     </record>

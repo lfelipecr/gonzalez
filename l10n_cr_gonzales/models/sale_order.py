@@ -138,3 +138,51 @@ class SaleOrder(models.Model):
             vals['pricelist_id'] = vals.setdefault('pricelist_id', partner.property_product_pricelist.id)
         result = super(SaleOrder, self).create(vals)
         return result
+
+
+    def delete_taxes(self):
+        for record in self:
+            if record.order_line:
+                for line in record.order_line:
+                    if line.tax_id:
+                        line.tax_id = False
+
+    @api.constrains('order_line','state')
+    def _check_qty_min_product(self):
+        # do not check during installation
+        for record in self:
+            if record.order_line:
+                for line in record.order_line:
+                    if line.product_uom_qty < line.qty_min_product and record.state in ('sent','sale'):
+                        raise ValidationError(_("La cantidad mínima para el producto %s es : %s" % (line.product_id.name, line.qty_min_product)))
+                    elif line.qty_min_product == False or line.qty_min_product == 0.0:
+                        raise ValidationError(_("El producto debe tener una cantidad mínima."))
+    # @api.onchange('state')
+    # def _onchange_state(self):
+    #     for record in self:
+    #         if record.order_line and record.state in ('sent','sale'):
+    #             for line in record.line:
+    #                 if line.product_uom_qty < line.qty_min_product:
+    #                     raise ValidationError(_("La cantidad mínima para el producto %s es : %s" % (line.product_id.name, line.product_uom_qty)))
+    #
+    #     return super(SaleOrder, self)._onchange_state()
+
+class SaleOrderLine(models.Model):
+    _inherit = 'sale.order.line'
+
+    qty_min_product = fields.Float('Cant.Mín', related='product_id.qty_min')
+
+    @api.constrains('qty_min_product')
+    def _check_qty_min_product(self):
+        # do not check during installation
+        if self.product_id.qty_min == False or self.product_id.qty_min == 0.0:
+            raise ValidationError(_("El producto debe tener una cantidad mínima."))
+
+    @api.onchange('product_id')
+    def product_id_change(self):
+        res = super(SaleOrderLine, self).product_id_change()
+        if self.product_id:
+            if self.product_id.qty_min == False or self.product_id.qty_min == 0.0:
+                raise ValidationError(_("El producto debe tener una cantidad mínima."))
+        return res
+

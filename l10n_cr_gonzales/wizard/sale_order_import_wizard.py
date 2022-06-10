@@ -82,6 +82,7 @@ class SaleOrderImportWizard(models.TransientModel):
                             'product_id': product.id,
                             'name': product.name,
                             'product_uom_qty': quantity,
+                            'qty_min_product': product.qty_min,
                             'order_id': order.id,
                             #'note_toys': note_toys
                         })
